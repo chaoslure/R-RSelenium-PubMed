@@ -1,166 +1,82 @@
-
 本篇文章将从头开始，并尝试使用无头浏览器phantomjs，获取PubMed上的文章信息。
-
 phantomjs 在Ubuntu上安装就会一个坑，使用sudo apt-get install phantomjs 的方式安装，安装结果是不完整的，根据官网提示还需要安装以下的库：
-
 sudo apt-get install build-essential g++ flex bison gperf ruby perl \  libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev \  libpng-dev libjpeg-dev python libx11-dev libxext-dev ttf-mscorefont
 #可以参考CSDN上的博客《ubuntu安装phantomjs apt-get和下载安装包两种方式》安装phantomjs
 wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2  #这个网站有很多版本phantom
-
 cd  /home/****/下载 #
-
 tar -xvf phantomjs-2.1.1-linux-x86_64.tar.bz2  -C /usr/local/share #解压文件到指定位置
-
 sudo ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs  /usr/local/bin/phantomjs #建立phantomjs的软连接到环境中
-
 phantomjs --version  #测试是否安装成功
 
-
-
 system("java -jar selenium-server-standalone-3.5.3.jar", invisible = TRUE,wait = FALSE, show.output.on.console = FALSE )
-
 #加载相关packages
-
 library(RSelenium)
-
-
 library(RSelenium)
-
 library(rvest)
-
 library(XML)
-
 library(data.table)
-
 #构建启动器，并启动浏览器。
-
 web_driver <- remoteDriver(remoteServerAddr="127.0.0.1",
-
                            port = 4444,
-
                            browserName = "phantomjs") 
-
 web_driver$open()
-
 web_driver$navigate("https://www.ncbi.nlm.nih.gov/")
-
 web_driver$screenshot(display = TRUE)
-
 PMC_element <- web_driver$findElement(using = "xpath",value = "//*[@id='database']//option[28]") 
-
 PMC_element$clickElement()
-
 search_element <- web_driver$findElement(using = "xpath",value = "//*[@id='term']")
-
 search_element$clickElement()  #点击搜索框
-
 search_element$clearElement() #清除已经存在的检索词
-
 search_element$sendKeysToActiveElement(list('stem cell', key = "enter")) #输入检索词，并按模拟键盘Enter键确认。
-
-
-
 #获取一页内容
-
 page_souce <- web_driver$getPageSource()[[1]]
-
 paper_node <- read_html(page_souce) %>% 
-
   html_nodes(css = "div.content div.rprt")
-
 #题目内容获取
-
 title <- paper_node %>% 
-
   html_nodes(css = "div.title a.view") %>% 
-
   html_text()
-
 #作者名获取
-
 author <- paper_node %>% 
-
   html_nodes(css = "div.supp div.desc") %>% 
-
   html_text()
-
 #doi号获取
-
 doi <- paper_node %>% 
-
   html_nodes(css = "div.details span.doi") %>% 
-
   html_text()
-
 #PMCID获取
-
 pmcid <- paper_node %>% 
-
   html_nodes(css = "dl.rprtid dd") %>% 
-
   html_text()
-
 #建立数据框合并数据并存储
-
 library(data.table)
-
 data_meg <- data.table(title, author, doi, pmcid)
-
-
-
-
 data_result <- data.table()
-
 #获取30页内容，建立for循环，多加几个print可以提示程序运行到哪一步出错。
-
 for(i in 1:30) {
-
   result <- tryCatch(run={
-
     print(sprintf("################page %d ###########",i))
-
     page_souce <- web_driver$getPageSource()[[1]]
-
     paper_node <- read_html(page_souce) %>% 
-
       html_nodes(css = "div.content div.rprt")
-
     title <- paper_node %>% 
-
       html_nodes(css = "div.title a.view") %>% 
-
       html_text()
-
     author <- paper_node %>% 
-
       html_nodes(css = "div.supp div.desc") %>% 
-
       html_text()
-
     doi <- paper_node %>% 
-
       html_nodes(css = "div.details span.doi") %>% 
-
       html_text()
-
     pmcid <- paper_node %>% 
-
       html_nodes(css = "dl.rprtid dd") %>% 
-
       html_text()
-
     print(sprintf("#####data achive page %d done#####",i))
-
     data_meg <- data.table(title, author, doi, pmcid)
-
     data_list <- list(data_result,data_meg)
-
     data_result <- rbindlist(data_list)
-
     print(sprintf("########page %d done#########",i))
-
     page_down <- web_driver$findElement(using = "xpath", value = "//div[contains(@class , 'bottom')]//a[contains(text(), 'Next')]")
-
     page_down$clickElement()
 
     web_driver$screenshot(display = TRUE)
