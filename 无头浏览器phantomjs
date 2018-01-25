@@ -1,13 +1,14 @@
 本篇文章将从头开始，并尝试使用无头浏览器phantomjs，获取PubMed上的文章信息。
 phantomjs 在Ubuntu上安装就会一个坑，使用sudo apt-get install phantomjs 的方式安装，安装结果是不完整的，根据官网提示还需要安装以下的库：
-sudo apt-get install build-essential g++ flex bison gperf ruby perl \  libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev \  libpng-dev libjpeg-dev python libx11-dev libxext-dev ttf-mscorefont
+sudo apt-get install build-essential g++ flex bison gperf ruby perl \  
+libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev \  
+libpng-dev libjpeg-dev python libx11-dev libxext-dev ttf-mscorefont
 #可以参考CSDN上的博客《ubuntu安装phantomjs apt-get和下载安装包两种方式》安装phantomjs
 wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2  #这个网站有很多版本phantom
 cd  /home/****/下载 #
 tar -xvf phantomjs-2.1.1-linux-x86_64.tar.bz2  -C /usr/local/share #解压文件到指定位置
 sudo ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs  /usr/local/bin/phantomjs #建立phantomjs的软连接到环境中
 phantomjs --version  #测试是否安装成功
-
 system("java -jar selenium-server-standalone-3.5.3.jar", invisible = TRUE,wait = FALSE, show.output.on.console = FALSE )
 #加载相关packages
 library(RSelenium)
@@ -78,43 +79,21 @@ for(i in 1:30) {
     print(sprintf("########page %d done#########",i))
     page_down <- web_driver$findElement(using = "xpath", value = "//div[contains(@class , 'bottom')]//a[contains(text(), 'Next')]")
     page_down$clickElement()
-
     web_driver$screenshot(display = TRUE)
-
     Sys.sleep(10)
-
   },warning = function(w){
-
     print(sprintf("Something wrong in page %d",i))
-
   },error = function(e){
-
     print(sprintf("#######page %d error#####",i))
-
     print(sprintf("No thing achive in page %d,palease check that pege.",i))
-
     cat("ERROR",conditionMessage(e),"")
-
     try({page_down <- web_driver$findElement(using = "xpath", value = "//div[contains(@class , 'bottom')]//a[contains(text(), 'Next')]")
-
     page_down$clickElement()
-
     web_driver$screenshot(display = TRUE)
-
     Sys.sleep(10)})
-
   },finally = {
-
     print(sprintf("finally data from page %d \n\n.",i))
-
   })
-
 }
-
-
-
 #需要注意的是PubMed的html代码使用的是CSS格式选取元素(class 属性以“.”表示，id属性以“#”开始)，如果以xpath 选择尽量以 *[@]的形式些或 *[contains(text(),'*****')]，在节点中以“//”选择当前节点以下的所有子节点。
-
-
-
 声明：作为一个文明的网民，此代码仅供参考学习，不要用于商业用途。
